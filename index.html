@@ -1,0 +1,883 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#0f4d3f">
+<title>دفتر مغازه</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #f3efe6;
+    --paper: #fffdf8;
+    --ink: #23302b;
+    --muted: #7c887f;
+    --line: #e2dbc9;
+    --primary: #0f4d3f;
+    --primary-2: #14654f;
+    --primary-soft: #e2ece7;
+    --amber: #b9772f;
+    --amber-soft: #f6e8d6;
+    --debt-them: #a13d3d;
+    --debt-them-soft: #f7e3e1;
+    --debt-me: #1c6b46;
+    --debt-me-soft: #e1efe5;
+    --shadow: 0 1px 2px rgba(35,48,43,.06), 0 6px 16px rgba(35,48,43,.06);
+    --radius: 16px;
+  }
+  *{ box-sizing: border-box; }
+  html,body{ margin:0; padding:0; }
+  body{
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'Vazirmatn', sans-serif;
+    -webkit-font-smoothing: antialiased;
+    min-height: 100vh;
+    padding-bottom: calc(78px + env(safe-area-inset-bottom));
+  }
+  .mono{ font-family:'IBM Plex Mono','Vazirmatn',monospace; direction:ltr; unicode-bidi:plaimtext; }
+  ::selection{ background: var(--primary-soft); }
+
+  header.top{
+    position: sticky; top:0; z-index: 20;
+    background: var(--primary);
+    color:#fff;
+    padding: 18px 18px 22px;
+    border-bottom-left-radius: 22px;
+    border-bottom-right-radius: 22px;
+    box-shadow: var(--shadow);
+  }
+  header.top .row{ display:flex; align-items:center; justify-content:space-between; }
+  header.top h1{ font-size: 19px; margin:0; font-weight:700; letter-spacing:.2px; }
+  header.top .sub{ font-size:12px; opacity:.75; margin-top:2px; }
+  .stamp{
+    font-family:'IBM Plex Mono',monospace; font-size:11px; opacity:.8;
+    border:1px solid rgba(255,255,255,.35); border-radius:20px; padding:4px 10px;
+  }
+
+  main{ max-width: 560px; margin: 0 auto; padding: 16px 14px 10px; }
+  section.screen{ display:none; animation: fade .18s ease; }
+  section.screen.active{ display:block; }
+  @keyframes fade{ from{opacity:0; transform:translateY(4px)} to{opacity:1; transform:none} }
+
+  .card{
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 16px;
+    box-shadow: var(--shadow);
+    margin-bottom: 14px;
+  }
+  .card h2{ margin:0 0 12px; font-size:15px; font-weight:700; color:var(--primary); }
+  .card h2 .tag{ font-size:11px; color:var(--muted); font-weight:500; margin-right:6px; }
+
+  .grid2{ display:grid; grid-template-columns: 1fr 1fr; gap:10px; }
+  .stat{
+    background: var(--primary-soft); border-radius:14px; padding:12px 12px;
+    display:flex; flex-direction:column; gap:4px;
+  }
+  .stat.debt-me{ background: var(--debt-me-soft); }
+  .stat.debt-them{ background: var(--debt-them-soft); }
+  .stat .label{ font-size:11.5px; color:var(--muted); }
+  .stat .value{ font-size:17px; font-weight:800; font-family:'IBM Plex Mono',monospace; direction:ltr; text-align:right; }
+  .stat.debt-me .value{ color: var(--debt-me); }
+  .stat.debt-them .value{ color: var(--debt-them); }
+
+  .quickbtns{ display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; margin-top:12px; }
+  .qbtn{
+    border:1px dashed var(--line); background:#fff; border-radius:12px; padding:10px 4px;
+    font-family:inherit; font-size:12px; color:var(--primary); cursor:pointer; text-align:center;
+  }
+  .qbtn:active{ background:var(--primary-soft); }
+
+  .linkbtn{ background:none;border:none;color:var(--primary-2);font-family:inherit;font-size:13px;font-weight:600; cursor:pointer; padding:0; }
+
+  label{ display:block; font-size:12.5px; color:var(--muted); margin: 12px 0 5px; }
+  label:first-of-type{ margin-top:0; }
+  input, select, textarea{
+    width:100%; font-family:'Vazirmatn',sans-serif; font-size:15px;
+    border:1px solid var(--line); border-radius:10px; padding:10px 12px;
+    background:#fff; color:var(--ink);
+  }
+  input:focus, select:focus, textarea:focus{ outline:2px solid var(--primary-2); outline-offset:1px; }
+  textarea{ resize: vertical; min-height:48px; }
+
+  .seg{ display:flex; border:1px solid var(--line); border-radius:12px; overflow:hidden; }
+  .seg button{
+    flex:1; padding:11px 4px; border:none; background:#fff; font-family:inherit; font-size:14px; font-weight:600; color:var(--muted); cursor:pointer;
+  }
+  .seg button.active.in{ background: var(--primary); color:#fff; }
+  .seg button.active.out{ background: var(--amber); color:#fff; }
+
+  .chk-row{ display:flex; align-items:center; gap:8px; margin-top:12px; background:var(--bg); border-radius:10px; padding:10px 12px; }
+  .chk-row input[type=checkbox]{ width:18px; height:18px; accent-color:var(--primary); }
+  .chk-row span{ font-size:13.5px; }
+
+  .btn-primary{
+    width:100%; margin-top:16px; background:var(--primary); color:#fff; border:none;
+    border-radius:12px; padding:13px; font-family:inherit; font-size:15px; font-weight:700; cursor:pointer;
+  }
+  .btn-primary.out{ background: var(--amber); }
+  .btn-primary:active{ transform: scale(.99); }
+  .btn-ghost{
+    width:100%; margin-top:8px; background:none; color:var(--muted); border:1px solid var(--line);
+    border-radius:12px; padding:11px; font-family:inherit; font-size:13.5px; cursor:pointer;
+  }
+
+  .person{ border-bottom:1px solid var(--line); padding:12px 0; }
+  .person:last-child{ border-bottom:none; }
+  .person .head{ display:flex; justify-content:space-between; align-items:center; cursor:pointer; }
+  .person .name{ font-weight:700; font-size:14.5px; }
+  .person .bal{ font-family:'IBM Plex Mono',monospace; font-weight:700; font-size:14px; direction:ltr; }
+  .person .bal.pos{ color:var(--debt-them); }
+  .person .bal.neg{ color:var(--debt-me); }
+  .person .bal.zero{ color:var(--muted); }
+  .person .sub{ font-size:11px; color:var(--muted); margin-top:2px; }
+  .person .detail{ display:none; margin-top:10px; background:var(--bg); border-radius:10px; padding:10px; }
+  .person.open .detail{ display:block; }
+  .tx-mini{ display:flex; justify-content:space-between; font-size:12.5px; padding:5px 0; border-bottom:1px dashed var(--line); }
+  .tx-mini:last-child{ border-bottom:none; }
+  .tx-mini .amt{ font-family:'IBM Plex Mono',monospace; direction:ltr; }
+  .badge-paid{ font-size:10.5px; padding:2px 7px; border-radius:20px; cursor:pointer; }
+  .badge-paid.yes{ background:var(--debt-me-soft); color:var(--debt-me); }
+  .badge-paid.no{ background:var(--debt-them-soft); color:var(--debt-them); }
+  .adj-form{ display:flex; gap:6px; margin-top:8px; }
+  .adj-form input{ flex:1; }
+  .adj-form button{ background:var(--primary); color:#fff; border:none; border-radius:8px; padding:0 12px; font-size:12.5px; }
+  .settle-btn{ margin-top:8px; width:100%; background:#fff; border:1px solid var(--primary); color:var(--primary); border-radius:8px; padding:8px; font-size:12.5px; font-family:inherit; }
+
+  .hist-row{ padding:10px 0; border-bottom:1px solid var(--line); }
+  .hist-row:last-child{ border-bottom:none; }
+  .hist-top{ display:flex; justify-content:space-between; align-items:baseline; }
+  .hist-prod{ font-weight:700; font-size:13.5px; }
+  .hist-prod .code{ font-size:10.5px; color:var(--muted); font-weight:500; margin-right:4px; }
+  .hist-amt{ font-family:'IBM Plex Mono',monospace; font-weight:700; font-size:13.5px; direction:ltr; }
+  .hist-amt.in{ color:var(--primary-2); }
+  .hist-amt.out{ color:var(--amber); }
+  .hist-meta{ display:flex; justify-content:space-between; font-size:11px; color:var(--muted); margin-top:3px; }
+  .hist-actions{ display:flex; gap:8px; margin-top:6px; }
+  .hist-actions button{ font-size:11px; border:none; background:var(--bg); border-radius:7px; padding:4px 9px; color:var(--ink); font-family:inherit; }
+  .hist-actions button.del{ color:var(--debt-them); }
+
+  .filters{ display:flex; gap:8px; margin-bottom:10px; }
+  .filters select{ flex:1; font-size:13px; padding:8px; }
+
+  .empty{ text-align:center; color:var(--muted); font-size:13px; padding:24px 8px; }
+
+  .report-grid{ display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:14px; }
+  table.codes{ width:100%; border-collapse:collapse; font-size:12.5px; }
+  table.codes th, table.codes td{ padding:7px 4px; text-align:center; border-bottom:1px solid var(--line); }
+  table.codes th{ color:var(--muted); font-weight:600; font-size:11px; }
+  table.codes td.profit-pos{ color:var(--debt-me); font-weight:700; }
+  table.codes td.profit-neg{ color:var(--debt-them); font-weight:700; }
+
+  nav.bottom{
+    position: fixed; bottom:0; left:0; right:0; z-index:30;
+    background: var(--paper); border-top:1px solid var(--line);
+    display:flex; padding: 6px 6px calc(6px + env(safe-area-inset-bottom));
+    box-shadow: 0 -4px 14px rgba(35,48,43,.06);
+  }
+  nav.bottom button{
+    flex:1; background:none; border:none; font-family:inherit; display:flex; flex-direction:column; align-items:center; gap:2px;
+    padding:8px 2px; color:var(--muted); font-size:10.5px; cursor:pointer; border-radius:12px;
+  }
+  nav.bottom button .ic{ font-size:19px; line-height:1; }
+  nav.bottom button.active{ color:var(--primary); background:var(--primary-soft); }
+
+  .backlink{ display:inline-flex; align-items:center; gap:4px; color:var(--primary-2); font-size:13px; font-weight:600; background:none; border:none; font-family:inherit; margin-bottom:10px; cursor:pointer; padding:0; }
+  datalist{}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="row">
+    <div>
+      <h1>دفتر مغازه</h1>
+      <div class="sub" id="todayLine">—</div>
+    </div>
+    <div class="stamp" id="clock">—</div>
+  </div>
+</header>
+
+<main>
+
+  <!-- DASHBOARD -->
+  <section class="screen active" id="screen-dashboard">
+    <div class="card">
+      <h2>وضعیت حساب‌ها</h2>
+      <div class="grid2">
+        <div class="stat debt-them">
+          <span class="label">بدهکار به شما</span>
+          <span class="value" id="dashOwedToMe">۰</span>
+        </div>
+        <div class="stat debt-me">
+          <span class="label">بدهی شما به دیگران</span>
+          <span class="value" id="dashIOwe">۰</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>این ماه <span class="tag" id="dashMonthLabel"></span></h2>
+      <div class="grid2">
+        <div class="stat">
+          <span class="label">فروش این ماه</span>
+          <span class="value" id="dashSales">۰</span>
+        </div>
+        <div class="stat">
+          <span class="label">خرید این ماه</span>
+          <span class="value" id="dashPurchases">۰</span>
+        </div>
+      </div>
+      <div class="grid2" style="margin-top:10px">
+        <div class="stat">
+          <span class="label">هزینه‌های این ماه</span>
+          <span class="value" id="dashExpenses">۰</span>
+        </div>
+        <div class="stat debt-me">
+          <span class="label">سود خالص این ماه</span>
+          <span class="value" id="dashProfit">۰</span>
+        </div>
+      </div>
+      <div class="quickbtns">
+        <button class="qbtn" data-go="entry-in">➕ ورود کالا</button>
+        <button class="qbtn" data-go="entry-out">➖ خروج کالا</button>
+        <button class="qbtn" data-go="expenses">💰 هزینه</button>
+      </div>
+      <button class="linkbtn" style="margin-top:14px" data-go="history">مشاهده کامل تاریخچه تراکنش‌ها ›</button>
+    </div>
+  </section>
+
+  <!-- HISTORY (reached via link, not in bottom nav) -->
+  <section class="screen" id="screen-history">
+    <button class="backlink" data-go="dashboard">‹ بازگشت به داشبورد</button>
+    <div class="card">
+      <h2>تاریخچه تراکنش‌ها</h2>
+      <div class="filters">
+        <select id="filterType">
+          <option value="all">همه</option>
+          <option value="in">فقط ورودی‌ها</option>
+          <option value="out">فقط خروجی‌ها</option>
+        </select>
+        <select id="filterPaid">
+          <option value="all">همه وضعیت‌ها</option>
+          <option value="no">فقط تسویه‌نشده‌ها</option>
+          <option value="yes">فقط تسویه‌شده‌ها</option>
+        </select>
+      </div>
+      <div id="historyList"></div>
+    </div>
+  </section>
+
+  <!-- ENTRY (in/out) -->
+  <section class="screen" id="screen-entry">
+    <div class="card">
+      <h2 id="entryTitle">ثبت ورود / خروج کالا</h2>
+      <div class="seg">
+        <button type="button" id="segIn" class="in">ورود کالا (خرید)</button>
+        <button type="button" id="segOut" class="out">خروج کالا (فروش)</button>
+      </div>
+
+      <form id="entryForm">
+        <label>تاریخ</label>
+        <input type="date" id="fDate" required>
+
+        <label>نام محصول</label>
+        <input type="text" id="fName" placeholder="مثلاً شلوار جین" required>
+
+        <label>کد محصول</label>
+        <input type="text" id="fCode" placeholder="مثلاً کد ۱">
+
+        <label id="lblPrice">مبلغ (تومان)</label>
+        <input type="number" id="fPrice" min="0" placeholder="۰" required>
+
+        <label id="lblParty">طرف حساب</label>
+        <input type="text" id="fParty" list="partyList" placeholder="نام شخص" required>
+        <datalist id="partyList"></datalist>
+
+        <div class="chk-row">
+          <input type="checkbox" id="fPaid">
+          <span id="lblPaid">پول را پرداخت کرده‌ام</span>
+        </div>
+
+        <label>روش پرداخت</label>
+        <select id="fMethod">
+          <option>نقدی</option>
+          <option>کارت به کارت</option>
+          <option>چک</option>
+          <option>واریز بانکی</option>
+          <option>سایر</option>
+        </select>
+
+        <label>توضیحات (اختیاری)</label>
+        <textarea id="fNotes" placeholder="یادداشت..."></textarea>
+
+        <button type="submit" class="btn-primary" id="entrySubmit">ثبت ورود کالا</button>
+      </form>
+    </div>
+  </section>
+
+  <!-- PERSONS -->
+  <section class="screen" id="screen-persons">
+    <div class="card">
+      <h2>حساب اشخاص</h2>
+      <div id="personsList"></div>
+    </div>
+  </section>
+
+  <!-- EXPENSES -->
+  <section class="screen" id="screen-expenses">
+    <div class="card">
+      <h2>ثبت هزینه جدید</h2>
+      <form id="expenseForm">
+        <label>تاریخ</label>
+        <input type="date" id="eDate" required>
+        <label>مبلغ (تومان)</label>
+        <input type="number" id="eAmount" min="0" required>
+        <label>بابت چه چیزی؟</label>
+        <input type="text" id="ePurpose" placeholder="مثلاً خرید کیسه، خرید مارک..." required>
+        <label>مبدأ هزینه (از کجا پرداخت شد)</label>
+        <input type="text" id="eSource" placeholder="مثلاً صندوق مغازه، کارت بانکی من">
+        <label>توضیحات (اختیاری)</label>
+        <textarea id="eNotes"></textarea>
+        <button type="submit" class="btn-primary">ثبت هزینه</button>
+      </form>
+    </div>
+    <div class="card">
+      <h2>لیست هزینه‌ها</h2>
+      <div id="expensesList"></div>
+    </div>
+  </section>
+
+  <!-- REPORT -->
+  <section class="screen" id="screen-report">
+    <div class="card">
+      <h2>گزارش سود و زیان</h2>
+      <div class="grid2">
+        <div>
+          <label>از تاریخ</label>
+          <input type="date" id="rFrom">
+        </div>
+        <div>
+          <label>تا تاریخ</label>
+          <input type="date" id="rTo">
+        </div>
+      </div>
+      <button class="btn-primary" id="rCalc">محاسبه گزارش</button>
+    </div>
+    <div class="card" id="reportResult" style="display:none">
+      <h2>خلاصه بازه انتخابی</h2>
+      <div class="report-grid">
+        <div class="stat"><span class="label">فروش کل</span><span class="value" id="repSales">۰</span></div>
+        <div class="stat"><span class="label">خرید کل</span><span class="value" id="repPurch">۰</span></div>
+        <div class="stat"><span class="label">سود ناخالص</span><span class="value" id="repGross">۰</span></div>
+        <div class="stat"><span class="label">هزینه‌ها</span><span class="value" id="repExp">۰</span></div>
+      </div>
+      <div class="stat debt-me" style="margin-bottom:14px">
+        <span class="label">سود خالص نهایی</span>
+        <span class="value" id="repNet" style="font-size:20px">۰</span>
+      </div>
+      <h2 style="margin-bottom:8px">سود به تفکیک کد محصول</h2>
+      <table class="codes" id="codesTable"></table>
+    </div>
+  </section>
+
+</main>
+
+<nav class="bottom">
+  <button data-go="dashboard"><span class="ic">🏠</span>داشبورد</button>
+  <button data-go="entry-in"><span class="ic">➕</span>ثبت جدید</button>
+  <button data-go="persons"><span class="ic">👥</span>اشخاص</button>
+  <button data-go="expenses"><span class="ic">💰</span>هزینه‌ها</button>
+  <button data-go="report"><span class="ic">📊</span>گزارش</button>
+</nav>
+
+<script>
+/* ================= Jalali (Shamsi) date conversion — jalaali algorithm ================= */
+function jDiv(a,b){ return ~~(a/b); }
+function jMod(a,b){ return a - ~~(a/b)*b; }
+function g2d(gy,gm,gd){
+  var d = jDiv((gy + jDiv(gm-8,6) + 100100)*1461,4) + jDiv(153*jMod(gm+9,12)+2,5) + gd - 34840408;
+  d = d - jDiv(jDiv(gy+100100+jDiv(gm-8,6),100)*3,4) + 752;
+  return d;
+}
+function d2g(jdn){
+  var j = 4*jdn + 139361631;
+  j = j + jDiv(jDiv(4*jdn+183187720,146097)*3,4)*4 - 3908;
+  var i = jDiv(jMod(j,1461),4)*5 + 308;
+  var gd = jDiv(jMod(i,153),5) + 1;
+  var gm = jMod(jDiv(i,153),12) + 1;
+  var gy = jDiv(j,1461) - 100100 + jDiv(8-gm,6);
+  return {gy:gy, gm:gm, gd:gd};
+}
+function jalCal(jy){
+  var breaks = [-61,9,38,199,426,686,756,818,1111,1181,1210,1635,2060,2097,2192,2262,2324,2394,2456,3178];
+  var bl = breaks.length, gy = jy+621, leapJ=-14, jp=breaks[0], jm,jump,leap,n,i;
+  for(i=1;i<bl;i++){
+    jm = breaks[i]; jump = jm-jp;
+    if(jy < jm) break;
+    leapJ = leapJ + jDiv(jump,33)*8 + jDiv(jMod(jump,33),4);
+    jp = jm;
+  }
+  n = jy - jp;
+  leapJ = leapJ + jDiv(n,33)*8 + jDiv(jMod(n,33)+3,4);
+  if(jMod(jump,33)===4 && jump-n===4) leapJ += 1;
+  var leapG = jDiv(gy,4) - jDiv((jDiv(gy,100)+1)*3,4) - 150;
+  var march = 20 + leapJ - leapG;
+  if(jump - n < 6) n = n - jump + jDiv(jump+4,33)*33;
+  leap = jMod(jMod(n+1,33)-1,4);
+  if(leap === -1) leap = 4;
+  return {leap:leap, gy:gy, march:march};
+}
+function toJalaali(gy,gm,gd){
+  var jdn = g2d(gy,gm,gd);
+  var gy2 = d2g(jdn).gy;
+  var jy = gy2 - 621;
+  var r = jalCal(jy);
+  var jdn1f = g2d(gy2,3,r.march);
+  var k = jdn - jdn1f, jm, jd;
+  if(k >= 0){
+    if(k <= 185){ jm = 1 + jDiv(k,31); jd = jMod(k,31)+1; return {jy:jy,jm:jm,jd:jd}; }
+    else k -= 186;
+  } else { jy -= 1; k += 179; if(r.leap===1) k += 1; }
+  jm = 7 + jDiv(k,30); jd = jMod(k,30)+1;
+  return {jy:jy,jm:jm,jd:jd};
+}
+var JMONTHS = ['فروردین','اردیبهشت','خرداد','تیر','مرداد','شهریور','مهر','آبان','آذر','دی','بهمن','اسفند'];
+function fmtJalali(dateStr){
+  if(!dateStr) return '';
+  var p = dateStr.split('-').map(Number);
+  var j = toJalaali(p[0],p[1],p[2]);
+  return j.jd + ' ' + JMONTHS[j.jm-1] + ' ' + j.jy;
+}
+function todayISO(){
+  var d = new Date();
+  var m = String(d.getMonth()+1).padStart(2,'0');
+  var day = String(d.getDate()).padStart(2,'0');
+  return d.getFullYear()+'-'+m+'-'+day;
+}
+
+/* ================= State & storage ================= */
+let transactions = [];
+let expenses = [];
+let adjustments = [];
+let entryType = 'in';
+let openPerson = null;
+
+async function loadKey(key){
+  try{ const v = localStorage.getItem('shopledger:'+key); return v ? JSON.parse(v) : null; }
+  catch(e){ return null; }
+}
+async function saveKey(key,data){
+  try{ localStorage.setItem('shopledger:'+key, JSON.stringify(data)); }
+  catch(e){ console.error('save failed',key,e); }
+}
+async function loadAll(){
+  transactions = (await loadKey('transactions')) || [];
+  expenses = (await loadKey('expenses')) || [];
+  adjustments = (await loadKey('adjustments')) || [];
+}
+
+function escapeHtml(str){
+  return String(str==null?'':str).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+function toman(n){
+  n = Number(n)||0;
+  return n.toLocaleString('fa-IR') + ' تومان';
+}
+function uid(){ return Date.now().toString(36)+Math.random().toString(36).slice(2,7); }
+
+/* ================= Navigation ================= */
+function showTab(name){
+  document.querySelectorAll('section.screen').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('nav.bottom button').forEach(b=>b.classList.remove('active'));
+
+  if(name === 'entry-in' || name === 'entry-out'){
+    entryType = name === 'entry-in' ? 'in' : 'out';
+    document.getElementById('screen-entry').classList.add('active');
+    document.querySelector('nav.bottom button[data-go="entry-in"]').classList.add('active');
+    setEntryType(entryType);
+    return;
+  }
+  const map = {dashboard:'screen-dashboard', persons:'screen-persons', expenses:'screen-expenses', report:'screen-report', history:'screen-history'};
+  document.getElementById(map[name]).classList.add('active');
+  const navBtn = document.querySelector('nav.bottom button[data-go="'+name+'"]');
+  if(navBtn) navBtn.classList.add('active');
+  if(name==='persons') renderPersons();
+  if(name==='history') renderHistory();
+  if(name==='expenses') renderExpenses();
+  if(name==='dashboard') renderDashboard();
+}
+document.querySelectorAll('[data-go]').forEach(el=>{
+  el.addEventListener('click', ()=> showTab(el.getAttribute('data-go')));
+});
+
+/* ================= Entry form (in/out) ================= */
+function setEntryType(type){
+  entryType = type;
+  const segIn = document.getElementById('segIn');
+  const segOut = document.getElementById('segOut');
+  segIn.classList.toggle('active', type==='in');
+  segOut.classList.toggle('active', type==='out');
+  const submitBtn = document.getElementById('entrySubmit');
+  if(type==='in'){
+    document.getElementById('entryTitle').textContent = 'ثبت ورود کالا (خرید)';
+    document.getElementById('lblPrice').textContent = 'مبلغ خرید (تومان)';
+    document.getElementById('lblParty').textContent = 'از چه کسی خریدید؟';
+    document.getElementById('fParty').placeholder = 'نام فروشنده / تأمین‌کننده';
+    document.getElementById('lblPaid').textContent = 'پول را پرداخت کرده‌ام';
+    submitBtn.textContent = 'ثبت ورود کالا';
+    submitBtn.classList.remove('out');
+  } else {
+    document.getElementById('entryTitle').textContent = 'ثبت خروج کالا (فروش)';
+    document.getElementById('lblPrice').textContent = 'مبلغ فروش (تومان)';
+    document.getElementById('lblParty').textContent = 'به چه کسی فروختید؟';
+    document.getElementById('fParty').placeholder = 'نام مشتری';
+    document.getElementById('lblPaid').textContent = 'پول را دریافت کرده‌ام';
+    submitBtn.textContent = 'ثبت خروج کالا';
+    submitBtn.classList.add('out');
+  }
+}
+document.getElementById('segIn').addEventListener('click', ()=>setEntryType('in'));
+document.getElementById('segOut').addEventListener('click', ()=>setEntryType('out'));
+
+document.getElementById('entryForm').addEventListener('submit', async (e)=>{
+  e.preventDefault();
+  const tx = {
+    id: uid(),
+    type: entryType,
+    date: document.getElementById('fDate').value || todayISO(),
+    productName: document.getElementById('fName').value.trim(),
+    productCode: document.getElementById('fCode').value.trim(),
+    price: Number(document.getElementById('fPrice').value)||0,
+    party: document.getElementById('fParty').value.trim(),
+    paid: document.getElementById('fPaid').checked,
+    method: document.getElementById('fMethod').value,
+    notes: document.getElementById('fNotes').value.trim()
+  };
+  transactions.push(tx);
+  await saveKey('transactions', transactions);
+  refreshPartyList();
+  e.target.reset();
+  document.getElementById('fDate').value = todayISO();
+  setEntryType(entryType);
+  renderDashboard();
+  showTab('dashboard');
+});
+
+/* ================= Expenses ================= */
+document.getElementById('expenseForm').addEventListener('submit', async (e)=>{
+  e.preventDefault();
+  const ex = {
+    id: uid(),
+    date: document.getElementById('eDate').value || todayISO(),
+    amount: Number(document.getElementById('eAmount').value)||0,
+    purpose: document.getElementById('ePurpose').value.trim(),
+    source: document.getElementById('eSource').value.trim(),
+    notes: document.getElementById('eNotes').value.trim()
+  };
+  expenses.push(ex);
+  await saveKey('expenses', expenses);
+  e.target.reset();
+  document.getElementById('eDate').value = todayISO();
+  renderExpenses();
+});
+
+function renderExpenses(){
+  const el = document.getElementById('expensesList');
+  if(expenses.length===0){ el.innerHTML = '<div class="empty">هنوز هزینه‌ای ثبت نشده.</div>'; return; }
+  const sorted = [...expenses].sort((a,b)=> b.date.localeCompare(a.date));
+  el.innerHTML = sorted.map(ex=>`
+    <div class="hist-row">
+      <div class="hist-top">
+        <span class="hist-prod">${escapeHtml(ex.purpose)}</span>
+        <span class="hist-amt in">${toman(ex.amount)}</span>
+      </div>
+      <div class="hist-meta">
+        <span>${fmtJalali(ex.date)} · ${escapeHtml(ex.date)}</span>
+        <span>${escapeHtml(ex.source||'—')}</span>
+      </div>
+      ${ex.notes ? `<div class="hist-meta">${escapeHtml(ex.notes)}</div>` : ''}
+      <div class="hist-actions">
+        <button class="del" data-del-exp="${ex.id}">حذف</button>
+      </div>
+    </div>
+  `).join('');
+  el.querySelectorAll('[data-del-exp]').forEach(b=>{
+    b.addEventListener('click', async ()=>{
+      if(!confirm('این هزینه حذف شود؟')) return;
+      expenses = expenses.filter(x=>x.id !== b.getAttribute('data-del-exp'));
+      await saveKey('expenses', expenses);
+      renderExpenses();
+    });
+  });
+}
+
+/* ================= Persons / balances ================= */
+function computePersonBalances(){
+  const map = {};
+  function ensure(name){
+    if(!map[name]) map[name] = {name, oweToMe:0, oweFromMe:0, adjustment:0};
+    return map[name];
+  }
+  transactions.forEach(t=>{
+    if(!t.party) return;
+    const p = ensure(t.party);
+    if(t.paid) return;
+    if(t.type==='out') p.oweToMe += Number(t.price);
+    if(t.type==='in') p.oweFromMe += Number(t.price);
+  });
+  adjustments.forEach(a=>{
+    if(!a.party) return;
+    ensure(a.party).adjustment += Number(a.amount);
+  });
+  Object.values(map).forEach(p=> p.net = p.oweToMe - p.oweFromMe + p.adjustment);
+  return Object.values(map).sort((a,b)=> Math.abs(b.net) - Math.abs(a.net));
+}
+
+function renderPersons(){
+  const list = computePersonBalances();
+  const el = document.getElementById('personsList');
+  if(list.length===0){ el.innerHTML = '<div class="empty">هنوز شخصی ثبت نشده. از ثبت ورود/خروج کالا شروع کنید.</div>'; return; }
+  el.innerHTML = list.map(p=>{
+    const cls = p.net>0?'pos':(p.net<0?'neg':'zero');
+    const label = p.net>0 ? 'بدهکار به شما' : (p.net<0 ? 'شما بدهکار هستید' : 'تسویه');
+    const relatedTx = transactions.filter(t=> t.party===p.name && !t.paid);
+    const relatedAdj = adjustments.filter(a=> a.party===p.name);
+    return `
+    <div class="person" data-person="${escapeHtml(p.name)}">
+      <div class="head" data-toggle="${escapeHtml(p.name)}">
+        <div>
+          <div class="name">${escapeHtml(p.name)}</div>
+          <div class="sub">${label}</div>
+        </div>
+        <div class="bal ${cls}">${toman(Math.abs(p.net))}</div>
+      </div>
+      <div class="detail">
+        ${relatedTx.map(t=>`
+          <div class="tx-mini">
+            <span>${t.type==='out'?'فروش':'خرید'}: ${escapeHtml(t.productName)} — ${fmtJalali(t.date)}
+              <span class="badge-paid no" data-toggle-paid="${t.id}">تسویه نشده</span>
+            </span>
+            <span class="amt">${toman(t.price)}</span>
+          </div>
+        `).join('')}
+        ${relatedAdj.map(a=>`
+          <div class="tx-mini">
+            <span>تنظیم دستی${a.note?': '+escapeHtml(a.note):''} — ${fmtJalali(a.date)}</span>
+            <span class="amt">${a.amount>=0?'+':''}${toman(a.amount)}</span>
+          </div>
+        `).join('')}
+        ${(relatedTx.length===0 && relatedAdj.length===0) ? '<div class="empty" style="padding:8px">موردی برای نمایش نیست.</div>' : ''}
+        <div class="adj-form">
+          <input type="number" placeholder="مبلغ اصلاح (+/-)" data-adj-amount="${escapeHtml(p.name)}">
+          <input type="text" placeholder="یادداشت" data-adj-note="${escapeHtml(p.name)}">
+          <button data-adj-submit="${escapeHtml(p.name)}">ثبت</button>
+        </div>
+        <button class="settle-btn" data-settle="${escapeHtml(p.name)}">تسویه کامل حساب</button>
+      </div>
+    </div>`;
+  }).join('');
+
+  el.querySelectorAll('[data-toggle]').forEach(h=>{
+    h.addEventListener('click', ()=>{
+      const name = h.getAttribute('data-toggle');
+      const personEl = el.querySelector(`.person[data-person="${CSS.escape(name)}"]`);
+      const wasOpen = personEl.classList.contains('open');
+      el.querySelectorAll('.person.open').forEach(p=>p.classList.remove('open'));
+      if(!wasOpen) personEl.classList.add('open');
+    });
+  });
+  el.querySelectorAll('[data-toggle-paid]').forEach(b=>{
+    b.addEventListener('click', async (ev)=>{
+      ev.stopPropagation();
+      const id = b.getAttribute('data-toggle-paid');
+      const t = transactions.find(x=>x.id===id);
+      if(t){ t.paid = true; await saveKey('transactions', transactions); renderPersons(); renderDashboard(); }
+    });
+  });
+  el.querySelectorAll('[data-adj-submit]').forEach(b=>{
+    b.addEventListener('click', async (ev)=>{
+      ev.stopPropagation();
+      const name = b.getAttribute('data-adj-submit');
+      const amountInput = el.querySelector(`[data-adj-amount="${CSS.escape(name)}"]`);
+      const noteInput = el.querySelector(`[data-adj-note="${CSS.escape(name)}"]`);
+      const amount = Number(amountInput.value);
+      if(!amount){ alert('یک مبلغ معتبر وارد کنید (مثبت یا منفی)'); return; }
+      adjustments.push({id:uid(), date: todayISO(), party:name, amount, note: noteInput.value.trim()});
+      await saveKey('adjustments', adjustments);
+      renderPersons();
+    });
+  });
+  el.querySelectorAll('[data-settle]').forEach(b=>{
+    b.addEventListener('click', async (ev)=>{
+      ev.stopPropagation();
+      const name = b.getAttribute('data-settle');
+      const p = list.find(x=>x.name===name);
+      if(!p || p.net===0) return;
+      if(!confirm('حساب "'+name+'" کاملاً تسویه ثبت شود؟')) return;
+      adjustments.push({id:uid(), date: todayISO(), party:name, amount: -p.net, note:'تسویه حساب'});
+      await saveKey('adjustments', adjustments);
+      renderPersons();
+    });
+  });
+}
+
+/* ================= History ================= */
+function renderHistory(){
+  const typeF = document.getElementById('filterType').value;
+  const paidF = document.getElementById('filterPaid').value;
+  let list = [...transactions].sort((a,b)=> b.date.localeCompare(a.date));
+  if(typeF !== 'all') list = list.filter(t=>t.type===typeF);
+  if(paidF !== 'all') list = list.filter(t=> paidF==='yes' ? t.paid : !t.paid);
+
+  const el = document.getElementById('historyList');
+  if(list.length===0){ el.innerHTML = '<div class="empty">تراکنشی یافت نشد.</div>'; return; }
+  el.innerHTML = list.map(t=>`
+    <div class="hist-row">
+      <div class="hist-top">
+        <span class="hist-prod">${escapeHtml(t.productName)} ${t.productCode?'<span class="code">#'+escapeHtml(t.productCode)+'</span>':''}</span>
+        <span class="hist-amt ${t.type}">${t.type==='in'?'-':'+'}${toman(t.price)}</span>
+      </div>
+      <div class="hist-meta">
+        <span>${t.type==='in'?'خرید از':'فروش به'} ${escapeHtml(t.party)} · ${fmtJalali(t.date)}</span>
+        <span class="badge-paid ${t.paid?'yes':'no'}" data-tp="${t.id}">${t.paid ? 'تسویه شده' : 'تسویه نشده'}</span>
+      </div>
+      <div class="hist-meta"><span>روش پرداخت: ${escapeHtml(t.method||'—')}</span></div>
+      ${t.notes ? `<div class="hist-meta">${escapeHtml(t.notes)}</div>` : ''}
+      <div class="hist-actions">
+        <button class="del" data-del-tx="${t.id}">حذف</button>
+      </div>
+    </div>
+  `).join('');
+  el.querySelectorAll('[data-tp]').forEach(b=>{
+    b.addEventListener('click', async ()=>{
+      const t = transactions.find(x=>x.id===b.getAttribute('data-tp'));
+      if(t){ t.paid = !t.paid; await saveKey('transactions', transactions); renderHistory(); renderDashboard(); }
+    });
+  });
+  el.querySelectorAll('[data-del-tx]').forEach(b=>{
+    b.addEventListener('click', async ()=>{
+      if(!confirm('این تراکنش حذف شود؟')) return;
+      transactions = transactions.filter(x=>x.id !== b.getAttribute('data-del-tx'));
+      await saveKey('transactions', transactions);
+      renderHistory(); renderDashboard();
+    });
+  });
+}
+document.getElementById('filterType').addEventListener('change', renderHistory);
+document.getElementById('filterPaid').addEventListener('change', renderHistory);
+
+/* ================= Dashboard ================= */
+function renderDashboard(){
+  const balances = computePersonBalances();
+  const owedToMe = balances.filter(p=>p.net>0).reduce((s,p)=>s+p.net,0);
+  const iOwe = balances.filter(p=>p.net<0).reduce((s,p)=>s+Math.abs(p.net),0);
+  document.getElementById('dashOwedToMe').textContent = toman(owedToMe);
+  document.getElementById('dashIOwe').textContent = toman(iOwe);
+
+  const now = new Date();
+  const ymPrefix = now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0');
+  const j = toJalaali(now.getFullYear(), now.getMonth()+1, now.getDate());
+  document.getElementById('dashMonthLabel').textContent = JMONTHS[j.jm-1] + ' ' + j.jy;
+  document.getElementById('todayLine').textContent = fmtJalali(todayISO()) + ' · ' + todayISO();
+
+  const monthTx = transactions.filter(t=>t.date && t.date.startsWith(ymPrefix));
+  const sales = monthTx.filter(t=>t.type==='out').reduce((s,t)=>s+Number(t.price),0);
+  const purch = monthTx.filter(t=>t.type==='in').reduce((s,t)=>s+Number(t.price),0);
+  const monthExp = expenses.filter(e=>e.date && e.date.startsWith(ymPrefix)).reduce((s,e)=>s+Number(e.amount),0);
+  const profit = sales - purch - monthExp;
+  document.getElementById('dashSales').textContent = toman(sales);
+  document.getElementById('dashPurchases').textContent = toman(purch);
+  document.getElementById('dashExpenses').textContent = toman(monthExp);
+  document.getElementById('dashProfit').textContent = toman(profit);
+}
+
+/* ================= Report ================= */
+document.getElementById('rCalc').addEventListener('click', ()=>{
+  const from = document.getElementById('rFrom').value;
+  const to = document.getElementById('rTo').value;
+  if(!from || !to){ alert('بازه تاریخ را کامل انتخاب کنید'); return; }
+  const inRange = d => d >= from && d <= to;
+  const txs = transactions.filter(t=>inRange(t.date));
+  const exps = expenses.filter(e=>inRange(e.date));
+
+  const sales = txs.filter(t=>t.type==='out').reduce((s,t)=>s+Number(t.price),0);
+  const purch = txs.filter(t=>t.type==='in').reduce((s,t)=>s+Number(t.price),0);
+  const totalExp = exps.reduce((s,e)=>s+Number(e.amount),0);
+  const gross = sales - purch;
+  const net = gross - totalExp;
+
+  document.getElementById('repSales').textContent = toman(sales);
+  document.getElementById('repPurch').textContent = toman(purch);
+  document.getElementById('repGross').textContent = toman(gross);
+  document.getElementById('repExp').textContent = toman(totalExp);
+  document.getElementById('repNet').textContent = toman(net);
+
+  const codeMap = {};
+  txs.forEach(t=>{
+    const key = t.productCode ? t.productCode.trim() : ('(بدون کد) '+t.productName);
+    if(!codeMap[key]) codeMap[key] = {code:key, name:t.productName, buy:0, sell:0};
+    if(t.type==='in') codeMap[key].buy += Number(t.price);
+    else codeMap[key].sell += Number(t.price);
+    codeMap[key].name = t.productName;
+  });
+  const rows = Object.values(codeMap);
+  const tbl = document.getElementById('codesTable');
+  if(rows.length===0){
+    tbl.innerHTML = '<tr><td class="empty" colspan="4">تراکنشی در این بازه نیست</td></tr>';
+  } else {
+    tbl.innerHTML = `<tr><th>کد / محصول</th><th>خرید</th><th>فروش</th><th>سود</th></tr>` +
+      rows.map(r=>{
+        const p = r.sell - r.buy;
+        return `<tr>
+          <td>${escapeHtml(r.code)}<br><span style="color:var(--muted);font-size:10.5px">${escapeHtml(r.name)}</span></td>
+          <td>${toman(r.buy)}</td>
+          <td>${toman(r.sell)}</td>
+          <td class="${p>=0?'profit-pos':'profit-neg'}">${toman(p)}</td>
+        </tr>`;
+      }).join('');
+  }
+  document.getElementById('reportResult').style.display = 'block';
+});
+
+/* ================= Party autocomplete list ================= */
+function refreshPartyList(){
+  const names = new Set();
+  transactions.forEach(t=>{ if(t.party) names.add(t.party); });
+  adjustments.forEach(a=>{ if(a.party) names.add(a.party); });
+  document.getElementById('partyList').innerHTML =
+    [...names].map(n=>`<option value="${escapeHtml(n)}">`).join('');
+}
+
+/* ================= Clock ================= */
+function tickClock(){
+  const d = new Date();
+  document.getElementById('clock').textContent =
+    String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');
+}
+
+/* ================= Init ================= */
+(async function init(){
+  await loadAll();
+  document.getElementById('fDate').value = todayISO();
+  document.getElementById('eDate').value = todayISO();
+  const now = new Date();
+  const firstOfMonth = now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0')+'-01';
+  document.getElementById('rFrom').value = firstOfMonth;
+  document.getElementById('rTo').value = todayISO();
+  setEntryType('in');
+  refreshPartyList();
+  renderDashboard();
+  tickClock();
+  setInterval(tickClock, 30000);
+})();
+</script>
+</body>
+</html>
