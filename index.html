@@ -252,6 +252,17 @@
       </div>
       <button class="linkbtn" style="margin-top:14px" data-go="history">مشاهده کامل تاریخچه تراکنش‌ها ›</button>
     </div>
+
+    <div class="card">
+      <h2>پشتیبان‌گیری از اطلاعات</h2>
+      <div class="sub" style="font-size:12px;color:var(--muted);margin-bottom:10px">
+        همه‌ی اطلاعات فقط روی همین گوشی/مرورگر ذخیره می‌شه. برای اینکه با پاک شدن کش مرورگر یا تعویض گوشی چیزی از دست نره، هر روز یک فایل پشتیبان بگیرید و جایی امن (مثلاً iCloud Drive یا تلگرام «پیام‌های ذخیره شده») نگه دارید.
+      </div>
+      <button class="btn-primary" id="btnBackup" style="margin-top:0">دانلود فایل پشتیبان (JSON)</button>
+      <button class="btn-ghost" id="btnRestore">بازیابی از فایل پشتیبان</button>
+      <input type="file" id="restoreInput" accept="application/json" style="display:none">
+      <div id="backupStatus" style="font-size:11.5px;color:var(--muted);margin-top:8px"></div>
+    </div>
   </section>
 
   <!-- HISTORY (reached via link, not in bottom nav) -->
@@ -855,6 +866,55 @@ function refreshPartyList(){
   document.getElementById('partyList').innerHTML =
     [...names].map(n=>`<option value="${escapeHtml(n)}">`).join('');
 }
+
+/* ================= Backup / Restore ================= */
+function downloadBackup(){
+  const payload = {
+    app: 'shop-ledger',
+    exportedAt: new Date().toISOString(),
+    exportedAtJalali: fmtJalali(todayISO()),
+    transactions, expenses, adjustments
+  };
+  const blob = new Blob([JSON.stringify(payload, null, 2)], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'shop-ledger-backup-' + todayISO() + '.json';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(()=>URL.revokeObjectURL(url), 2000);
+  document.getElementById('backupStatus').textContent = 'فایل پشتیبان ساخته شد. اگر دیالوگ ذخیره باز شد، آن را در Files یا iCloud Drive نگه دارید.';
+}
+async function restoreFromFile(file){
+  try{
+    const text = await file.text();
+    const data = JSON.parse(text);
+    if(!data || !Array.isArray(data.transactions)){
+      document.getElementById('backupStatus').textContent = 'این فایل، فایل پشتیبان معتبری نیست.';
+      return;
+    }
+    if(!confirm('با بازیابی این فایل، اطلاعات فعلی جایگزین می‌شود. ادامه می‌دهید؟')) return;
+    transactions = data.transactions || [];
+    expenses = data.expenses || [];
+    adjustments = data.adjustments || [];
+    await saveKey('transactions', transactions);
+    await saveKey('expenses', expenses);
+    await saveKey('adjustments', adjustments);
+    refreshPartyList();
+    renderDashboard();
+    document.getElementById('backupStatus').textContent = 'بازیابی با موفقیت انجام شد (پشتیبان مربوط به ' + (data.exportedAtJalali || data.exportedAt || '') + ').';
+  } catch(e){
+    document.getElementById('backupStatus').textContent = 'خطا در خواندن فایل پشتیبان.';
+  }
+}
+document.getElementById('btnBackup').addEventListener('click', downloadBackup);
+document.getElementById('btnRestore').addEventListener('click', ()=> document.getElementById('restoreInput').click());
+document.getElementById('restoreInput').addEventListener('change', (e)=>{
+  const file = e.target.files[0];
+  if(file) restoreFromFile(file);
+  e.target.value = '';
+});
 
 /* ================= Clock ================= */
 function tickClock(){
