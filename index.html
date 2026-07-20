@@ -7,7 +7,8 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#0f4d3f">
-<title>دفتر مغازه</title>
+<title>Arax mood</title>
+<meta name="apple-mobile-web-app-title" content="Arax mood">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
@@ -191,6 +192,14 @@
 
   .backlink{ display:inline-flex; align-items:center; gap:4px; color:var(--primary-2); font-size:13px; font-weight:600; background:none; border:none; font-family:inherit; margin-bottom:10px; cursor:pointer; padding:0; }
   datalist{}
+
+  .jdate-row{ display:flex; gap:6px; }
+  .jdate-row select{ font-size:13.5px; padding:9px 4px; text-align:center; }
+  .jdate-row .jd-day{ flex:0 0 22%; }
+  .jdate-row .jd-month{ flex:1; }
+  .jdate-row .jd-year{ flex:0 0 30%; }
+
+  .search-box{ margin-bottom:12px; }
 </style>
 </head>
 <body>
@@ -198,7 +207,7 @@
 <header class="top">
   <div class="row">
     <div>
-      <h1>دفتر مغازه</h1>
+      <h1>Arax mood</h1>
       <div class="sub" id="todayLine">—</div>
     </div>
     <div class="stamp" id="clock">—</div>
@@ -296,14 +305,17 @@
       </div>
 
       <form id="entryForm">
-        <label>تاریخ</label>
-        <input type="date" id="fDate" required>
+        <label>تاریخ (شمسی)</label>
+        <div id="fDate" class="jdate-picker"></div>
 
         <label>نام محصول</label>
         <input type="text" id="fName" placeholder="مثلاً شلوار جین" required>
 
         <label>کد محصول</label>
         <input type="text" id="fCode" placeholder="مثلاً کد ۱">
+
+        <label>شماره فاکتور (اختیاری)</label>
+        <input type="text" id="fInvoice" placeholder="مثلاً ۱۰۲۳">
 
         <label id="lblPrice">مبلغ (تومان)</label>
         <input type="number" id="fPrice" min="0" placeholder="۰" required>
@@ -338,6 +350,7 @@
   <section class="screen" id="screen-persons">
     <div class="card">
       <h2>حساب اشخاص</h2>
+      <input type="text" id="personSearch" class="search-box" placeholder="جستجوی نام شخص...">
       <div id="personsList"></div>
     </div>
   </section>
@@ -347,8 +360,8 @@
     <div class="card">
       <h2>ثبت هزینه جدید</h2>
       <form id="expenseForm">
-        <label>تاریخ</label>
-        <input type="date" id="eDate" required>
+        <label>تاریخ (شمسی)</label>
+        <div id="eDate" class="jdate-picker"></div>
         <label>مبلغ (تومان)</label>
         <input type="number" id="eAmount" min="0" required>
         <label>بابت چه چیزی؟</label>
@@ -372,12 +385,12 @@
       <h2>گزارش سود و زیان</h2>
       <div class="grid2">
         <div>
-          <label>از تاریخ</label>
-          <input type="date" id="rFrom">
+          <label>از تاریخ (شمسی)</label>
+          <div id="rFrom" class="jdate-picker"></div>
         </div>
         <div>
-          <label>تا تاریخ</label>
-          <input type="date" id="rTo">
+          <label>تا تاریخ (شمسی)</label>
+          <div id="rTo" class="jdate-picker"></div>
         </div>
       </div>
       <button class="btn-primary" id="rCalc">محاسبه گزارش</button>
@@ -460,18 +473,78 @@ function toJalaali(gy,gm,gd){
   jm = 7 + jDiv(k,30); jd = jMod(k,30)+1;
   return {jy:jy,jm:jm,jd:jd};
 }
+function toGregorian(jy,jm,jd){
+  var r = jalCal(jy);
+  return d2g(g2d(r.gy,3,r.march) + (jm-1)*31 - jDiv(jm,7)*(jm-7) + jd - 1);
+}
 var JMONTHS = ['فروردین','اردیبهشت','خرداد','تیر','مرداد','شهریور','مهر','آبان','آذر','دی','بهمن','اسفند'];
+// dateStr stored throughout the app is ALREADY a Jalali "jy-jm-jd" string.
 function fmtJalali(dateStr){
   if(!dateStr) return '';
   var p = dateStr.split('-').map(Number);
-  var j = toJalaali(p[0],p[1],p[2]);
-  return j.jd + ' ' + JMONTHS[j.jm-1] + ' ' + j.jy;
+  return p[2] + ' ' + JMONTHS[p[1]-1] + ' ' + p[0];
 }
-function todayISO(){
+function toGregorianStr(dateStr){
+  if(!dateStr) return '';
+  var p = dateStr.split('-').map(Number);
+  var g = toGregorian(p[0],p[1],p[2]);
+  return g.gy + '/' + String(g.gm).padStart(2,'0') + '/' + String(g.gd).padStart(2,'0');
+}
+function nowJalaliStr(){
   var d = new Date();
-  var m = String(d.getMonth()+1).padStart(2,'0');
-  var day = String(d.getDate()).padStart(2,'0');
-  return d.getFullYear()+'-'+m+'-'+day;
+  var j = toJalaali(d.getFullYear(), d.getMonth()+1, d.getDate());
+  return j.jy + '-' + String(j.jm).padStart(2,'0') + '-' + String(j.jd).padStart(2,'0');
+}
+function jalaliMonthDays(jy,jm){
+  if(jm <= 6) return 31;
+  if(jm <= 11) return 30;
+  return jalCal(jy).leap === 1 ? 30 : 29;
+}
+
+/* ---- Jalali date-picker widget (day/month/year selects) ---- */
+function createDatePicker(containerId){
+  const el = document.getElementById(containerId);
+  el.innerHTML = '<div class="jdate-row"><select class="jd-day"></select><select class="jd-month"></select><select class="jd-year"></select></div>';
+  const nowJ = toJalaali(new Date().getFullYear(), new Date().getMonth()+1, new Date().getDate());
+  const yearSel = el.querySelector('.jd-year');
+  let yearsHtml = '';
+  for(let y = nowJ.jy - 6; y <= nowJ.jy + 1; y++) yearsHtml += `<option value="${y}">${y}</option>`;
+  yearSel.innerHTML = yearsHtml;
+  const monthSel = el.querySelector('.jd-month');
+  monthSel.innerHTML = JMONTHS.map((m,i)=>`<option value="${i+1}">${m}</option>`).join('');
+  function rebuildDays(keepDay){
+    const jy = Number(yearSel.value), jm = Number(monthSel.value);
+    const days = jalaliMonthDays(jy,jm);
+    const daySel = el.querySelector('.jd-day');
+    const prev = keepDay || Number(daySel.value) || 1;
+    let html = '';
+    for(let d=1; d<=days; d++) html += `<option value="${d}">${d}</option>`;
+    daySel.innerHTML = html;
+    daySel.value = Math.min(prev, days);
+  }
+  yearSel.addEventListener('change', ()=>rebuildDays());
+  monthSel.addEventListener('change', ()=>rebuildDays());
+  rebuildDays();
+  setPickerValue(containerId, nowJalaliStr());
+}
+function setPickerValue(containerId, jStr){
+  const el = document.getElementById(containerId);
+  const p = jStr.split('-').map(Number);
+  el.querySelector('.jd-year').value = p[0];
+  el.querySelector('.jd-month').value = p[1];
+  const days = jalaliMonthDays(p[0],p[1]);
+  const daySel = el.querySelector('.jd-day');
+  let html = '';
+  for(let d=1; d<=days; d++) html += `<option value="${d}">${d}</option>`;
+  daySel.innerHTML = html;
+  daySel.value = p[2];
+}
+function getPickerValue(containerId){
+  const el = document.getElementById(containerId);
+  const jy = el.querySelector('.jd-year').value;
+  const jm = String(el.querySelector('.jd-month').value).padStart(2,'0');
+  const jd = String(el.querySelector('.jd-day').value).padStart(2,'0');
+  return jy+'-'+jm+'-'+jd;
 }
 
 /* ================= State & storage ================= */
@@ -563,9 +636,10 @@ document.getElementById('entryForm').addEventListener('submit', async (e)=>{
   const tx = {
     id: uid(),
     type: entryType,
-    date: document.getElementById('fDate').value || todayISO(),
+    date: getPickerValue('fDate'),
     productName: document.getElementById('fName').value.trim(),
     productCode: document.getElementById('fCode').value.trim(),
+    invoiceNumber: document.getElementById('fInvoice').value.trim(),
     price: Number(document.getElementById('fPrice').value)||0,
     party: document.getElementById('fParty').value.trim(),
     paid: document.getElementById('fPaid').checked,
@@ -576,7 +650,7 @@ document.getElementById('entryForm').addEventListener('submit', async (e)=>{
   await saveKey('transactions', transactions);
   refreshPartyList();
   e.target.reset();
-  document.getElementById('fDate').value = todayISO();
+  setPickerValue('fDate', nowJalaliStr());
   setEntryType(entryType);
   renderDashboard();
   showTab('dashboard');
@@ -587,7 +661,7 @@ document.getElementById('expenseForm').addEventListener('submit', async (e)=>{
   e.preventDefault();
   const ex = {
     id: uid(),
-    date: document.getElementById('eDate').value || todayISO(),
+    date: getPickerValue('eDate'),
     amount: Number(document.getElementById('eAmount').value)||0,
     purpose: document.getElementById('ePurpose').value.trim(),
     source: document.getElementById('eSource').value.trim(),
@@ -596,7 +670,7 @@ document.getElementById('expenseForm').addEventListener('submit', async (e)=>{
   expenses.push(ex);
   await saveKey('expenses', expenses);
   e.target.reset();
-  document.getElementById('eDate').value = todayISO();
+  setPickerValue('eDate', nowJalaliStr());
   renderExpenses();
 });
 
@@ -611,7 +685,7 @@ function renderExpenses(){
         <span class="hist-amt in">${toman(ex.amount)}</span>
       </div>
       <div class="hist-meta">
-        <span>${fmtJalali(ex.date)} · ${escapeHtml(ex.date)}</span>
+        <span>${fmtJalali(ex.date)} <span style="opacity:.65">(${toGregorianStr(ex.date)})</span></span>
         <span>${escapeHtml(ex.source||'—')}</span>
       </div>
       ${ex.notes ? `<div class="hist-meta">${escapeHtml(ex.notes)}</div>` : ''}
@@ -652,10 +726,17 @@ function computePersonBalances(){
   return Object.values(map).sort((a,b)=> Math.abs(b.net) - Math.abs(a.net));
 }
 
+let personSearchTerm = '';
 function renderPersons(){
-  const list = computePersonBalances();
+  let list = computePersonBalances();
+  if(personSearchTerm) list = list.filter(p=> p.name.includes(personSearchTerm));
   const el = document.getElementById('personsList');
-  if(list.length===0){ el.innerHTML = '<div class="empty">هنوز شخصی ثبت نشده. از ثبت ورود/خروج کالا شروع کنید.</div>'; return; }
+  if(list.length===0){
+    el.innerHTML = personSearchTerm
+      ? '<div class="empty">شخصی با این نام یافت نشد.</div>'
+      : '<div class="empty">هنوز شخصی ثبت نشده. از ثبت ورود/خروج کالا شروع کنید.</div>';
+    return;
+  }
   el.innerHTML = list.map(p=>{
     const cls = p.net>0?'pos':(p.net<0?'neg':'zero');
     const label = p.net>0 ? 'بدهکار به شما' : (p.net<0 ? 'شما بدهکار هستید' : 'تسویه');
@@ -673,7 +754,7 @@ function renderPersons(){
       <div class="detail">
         ${relatedTx.map(t=>`
           <div class="tx-mini">
-            <span>${t.type==='out'?'فروش':'خرید'}: ${escapeHtml(t.productName)} — ${fmtJalali(t.date)}
+            <span>${t.type==='out'?'فروش':'خرید'}: ${escapeHtml(t.productName)}${t.invoiceNumber?' (فاکتور #'+escapeHtml(t.invoiceNumber)+')':''} — ${fmtJalali(t.date)}
               <span class="badge-paid no" data-toggle-paid="${t.id}">تسویه نشده</span>
             </span>
             <span class="amt">${toman(t.price)}</span>
@@ -721,7 +802,7 @@ function renderPersons(){
       const noteInput = el.querySelector(`[data-adj-note="${CSS.escape(name)}"]`);
       const amount = Number(amountInput.value);
       if(!amount){ alert('یک مبلغ معتبر وارد کنید (مثبت یا منفی)'); return; }
-      adjustments.push({id:uid(), date: todayISO(), party:name, amount, note: noteInput.value.trim()});
+      adjustments.push({id:uid(), date: nowJalaliStr(), party:name, amount, note: noteInput.value.trim()});
       await saveKey('adjustments', adjustments);
       renderPersons();
     });
@@ -733,7 +814,7 @@ function renderPersons(){
       const p = list.find(x=>x.name===name);
       if(!p || p.net===0) return;
       if(!confirm('حساب "'+name+'" کاملاً تسویه ثبت شود؟')) return;
-      adjustments.push({id:uid(), date: todayISO(), party:name, amount: -p.net, note:'تسویه حساب'});
+      adjustments.push({id:uid(), date: nowJalaliStr(), party:name, amount: -p.net, note:'تسویه حساب'});
       await saveKey('adjustments', adjustments);
       renderPersons();
     });
@@ -757,7 +838,7 @@ function renderHistory(){
         <span class="hist-amt ${t.type}">${t.type==='in'?'-':'+'}${toman(t.price)}</span>
       </div>
       <div class="hist-meta">
-        <span>${t.type==='in'?'خرید از':'فروش به'} ${escapeHtml(t.party)} · ${fmtJalali(t.date)}</span>
+        <span>${t.type==='in'?'خرید از':'فروش به'} ${escapeHtml(t.party)} · ${fmtJalali(t.date)} <span style="opacity:.6">(${toGregorianStr(t.date)})</span>${t.invoiceNumber?' · فاکتور #'+escapeHtml(t.invoiceNumber):''}</span>
         <span class="badge-paid ${t.paid?'yes':'no'}" data-tp="${t.id}">${t.paid ? 'تسویه شده' : 'تسویه نشده'}</span>
       </div>
       <div class="hist-meta"><span>روش پرداخت: ${escapeHtml(t.method||'—')}</span></div>
@@ -784,6 +865,10 @@ function renderHistory(){
 }
 document.getElementById('filterType').addEventListener('change', renderHistory);
 document.getElementById('filterPaid').addEventListener('change', renderHistory);
+document.getElementById('personSearch').addEventListener('input', (e)=>{
+  personSearchTerm = e.target.value.trim();
+  renderPersons();
+});
 
 /* ================= Dashboard ================= */
 function renderDashboard(){
@@ -793,11 +878,11 @@ function renderDashboard(){
   document.getElementById('dashOwedToMe').textContent = toman(owedToMe);
   document.getElementById('dashIOwe').textContent = toman(iOwe);
 
-  const now = new Date();
-  const ymPrefix = now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0');
-  const j = toJalaali(now.getFullYear(), now.getMonth()+1, now.getDate());
-  document.getElementById('dashMonthLabel').textContent = JMONTHS[j.jm-1] + ' ' + j.jy;
-  document.getElementById('todayLine').textContent = fmtJalali(todayISO()) + ' · ' + todayISO();
+  const todayJ = nowJalaliStr();
+  const ymPrefix = todayJ.slice(0,7);
+  const jy = Number(todayJ.slice(0,4)), jm = Number(todayJ.slice(5,7));
+  document.getElementById('dashMonthLabel').textContent = JMONTHS[jm-1] + ' ' + jy;
+  document.getElementById('todayLine').textContent = fmtJalali(todayJ) + ' (' + toGregorianStr(todayJ) + ')';
 
   const monthTx = transactions.filter(t=>t.date && t.date.startsWith(ymPrefix));
   const sales = monthTx.filter(t=>t.type==='out').reduce((s,t)=>s+Number(t.price),0);
@@ -812,9 +897,8 @@ function renderDashboard(){
 
 /* ================= Report ================= */
 document.getElementById('rCalc').addEventListener('click', ()=>{
-  const from = document.getElementById('rFrom').value;
-  const to = document.getElementById('rTo').value;
-  if(!from || !to){ alert('بازه تاریخ را کامل انتخاب کنید'); return; }
+  const from = getPickerValue('rFrom');
+  const to = getPickerValue('rTo');
   const inRange = d => d >= from && d <= to;
   const txs = transactions.filter(t=>inRange(t.date));
   const exps = expenses.filter(e=>inRange(e.date));
@@ -872,14 +956,14 @@ function downloadBackup(){
   const payload = {
     app: 'shop-ledger',
     exportedAt: new Date().toISOString(),
-    exportedAtJalali: fmtJalali(todayISO()),
+    exportedAtJalali: fmtJalali(nowJalaliStr()),
     transactions, expenses, adjustments
   };
   const blob = new Blob([JSON.stringify(payload, null, 2)], {type:'application/json'});
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = 'shop-ledger-backup-' + todayISO() + '.json';
+  a.download = 'arax-mood-backup-' + nowJalaliStr() + '.json';
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);
@@ -926,12 +1010,14 @@ function tickClock(){
 /* ================= Init ================= */
 (async function init(){
   await loadAll();
-  document.getElementById('fDate').value = todayISO();
-  document.getElementById('eDate').value = todayISO();
-  const now = new Date();
-  const firstOfMonth = now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0')+'-01';
-  document.getElementById('rFrom').value = firstOfMonth;
-  document.getElementById('rTo').value = todayISO();
+  createDatePicker('fDate');
+  createDatePicker('eDate');
+  createDatePicker('rFrom');
+  createDatePicker('rTo');
+  const todayJ = nowJalaliStr();
+  const firstOfMonthJ = todayJ.slice(0,7) + '-01';
+  setPickerValue('rFrom', firstOfMonthJ);
+  setPickerValue('rTo', todayJ);
   setEntryType('in');
   refreshPartyList();
   renderDashboard();
