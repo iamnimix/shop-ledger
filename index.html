@@ -41,7 +41,7 @@
     min-height: 100vh;
     padding-bottom: calc(78px + env(safe-area-inset-bottom));
   }
-  .mono{ font-family:'IBM Plex Mono','Vazirmatn',monospace; direction:ltr; unicode-bidi:plaimtext; }
+  .mono{ font-family:'IBM Plex Mono','Vazirmatn',monospace; direction:ltr; }
   ::selection{ background: var(--primary-soft); }
 
   header.top{
@@ -129,6 +129,12 @@
     width:100%; margin-top:8px; background:none; color:var(--muted); border:1px solid var(--line);
     border-radius:12px; padding:11px; font-family:inherit; font-size:13.5px; cursor:pointer;
   }
+  .btn-small{
+    background:var(--bg); border:1px solid var(--line); border-radius:8px; padding:6px 10px;
+    font-family:inherit; font-size:11.5px; color:var(--ink); cursor:pointer;
+  }
+  .btn-small.primary{ background:var(--primary); color:#fff; border-color:var(--primary); }
+  .btn-small.danger{ color:var(--debt-them); }
 
   .person{ border-bottom:1px solid var(--line); padding:12px 0; }
   .person:last-child{ border-bottom:none; }
@@ -141,22 +147,25 @@
   .person .sub{ font-size:11px; color:var(--muted); margin-top:2px; }
   .person .detail{ display:none; margin-top:10px; background:var(--bg); border-radius:10px; padding:10px; }
   .person.open .detail{ display:block; }
-  .tx-mini{ display:flex; justify-content:space-between; font-size:12.5px; padding:5px 0; border-bottom:1px dashed var(--line); }
-  .tx-mini:last-child{ border-bottom:none; }
-  .tx-mini .amt{ font-family:'IBM Plex Mono',monospace; direction:ltr; }
-  .badge-paid{ font-size:10.5px; padding:2px 7px; border-radius:20px; cursor:pointer; }
-  .badge-paid.yes{ background:var(--debt-me-soft); color:var(--debt-me); }
-  .badge-paid.no{ background:var(--debt-them-soft); color:var(--debt-them); }
-  .adj-form{ display:flex; gap:6px; margin-top:8px; }
-  .adj-form input{ flex:1; }
-  .adj-form button{ background:var(--primary); color:#fff; border:none; border-radius:8px; padding:0 12px; font-size:12.5px; }
-  .settle-btn{ margin-top:8px; width:100%; background:#fff; border:1px solid var(--primary); color:var(--primary); border-radius:8px; padding:8px; font-size:12.5px; font-family:inherit; }
+  .tx-mini-wrap{ border-bottom:1px dashed var(--line); padding:6px 0; }
+  .tx-mini-wrap:last-child{ border-bottom:none; }
+  .tx-mini{ display:flex; justify-content:space-between; align-items:flex-start; font-size:12.5px; gap:8px; }
+  .tx-mini .desc{ flex:1; }
+  .tx-mini .amt{ font-family:'IBM Plex Mono',monospace; direction:ltr; white-space:nowrap; }
+  .tx-mini-actions{ margin-top:4px; }
+  .tx-edit-form{ margin-top:8px; background:#fff; border:1px solid var(--line); border-radius:10px; padding:8px; display:flex; flex-direction:column; gap:6px; }
+  .tx-edit-form input{ font-size:13px; padding:8px 10px; }
+  .tx-edit-form .row2{ display:flex; gap:6px; }
+  .tx-edit-form .row2 input{ flex:1; }
+  .tx-edit-actions{ display:flex; gap:6px; margin-top:2px; }
+  .tx-edit-actions button{ flex:1; }
+  .adj-mini{ display:flex; justify-content:space-between; font-size:12px; padding:4px 0; color:var(--muted); }
+  .settle-btn{ margin-top:10px; width:100%; background:#fff; border:1px solid var(--primary); color:var(--primary); border-radius:8px; padding:9px; font-size:12.5px; font-family:inherit; }
 
   .hist-row{ padding:10px 0; border-bottom:1px solid var(--line); }
   .hist-row:last-child{ border-bottom:none; }
   .hist-top{ display:flex; justify-content:space-between; align-items:baseline; }
   .hist-prod{ font-weight:700; font-size:13.5px; }
-  .hist-prod .code{ font-size:10.5px; color:var(--muted); font-weight:500; margin-right:4px; }
   .hist-amt{ font-family:'IBM Plex Mono',monospace; font-weight:700; font-size:13.5px; direction:ltr; }
   .hist-amt.in{ color:var(--primary-2); }
   .hist-amt.out{ color:var(--amber); }
@@ -191,7 +200,6 @@
   nav.bottom button.active{ color:var(--primary); background:var(--primary-soft); }
 
   .backlink{ display:inline-flex; align-items:center; gap:4px; color:var(--primary-2); font-size:13px; font-weight:600; background:none; border:none; font-family:inherit; margin-bottom:10px; cursor:pointer; padding:0; }
-  datalist{}
 
   .jdate-row{ display:flex; gap:6px; }
   .jdate-row select{ font-size:13.5px; padding:9px 4px; text-align:center; }
@@ -200,6 +208,11 @@
   .jdate-row .jd-year{ flex:0 0 30%; }
 
   .search-box{ margin-bottom:12px; }
+  .total-preview{
+    margin-top:12px; background: var(--amber-soft); border-radius:10px; padding:10px 12px;
+    font-size:13.5px; font-weight:600; color: var(--amber); display:flex; justify-content:space-between;
+  }
+  .total-preview span{ font-family:'IBM Plex Mono',monospace; direction:ltr; }
 </style>
 </head>
 <body>
@@ -274,7 +287,7 @@
     </div>
   </section>
 
-  <!-- HISTORY (reached via link, not in bottom nav) -->
+  <!-- HISTORY -->
   <section class="screen" id="screen-history">
     <button class="backlink" data-go="dashboard">‹ بازگشت به داشبورد</button>
     <div class="card">
@@ -311,14 +324,16 @@
         <label>نام محصول</label>
         <input type="text" id="fName" placeholder="مثلاً شلوار جین" required>
 
-        <label>کد محصول</label>
-        <input type="text" id="fCode" placeholder="مثلاً کد ۱">
-
         <label>شماره فاکتور (اختیاری)</label>
         <input type="text" id="fInvoice" placeholder="مثلاً ۱۰۲۳">
 
-        <label id="lblPrice">مبلغ (تومان)</label>
+        <label>تعداد</label>
+        <input type="number" id="fQty" min="1" value="1" required>
+
+        <label id="lblPrice">قیمت واحد (تومان)</label>
         <input type="number" id="fPrice" min="0" placeholder="۰" required>
+
+        <div class="total-preview">مبلغ نهایی: <span id="fTotalPreview">۰ تومان</span></div>
 
         <label id="lblParty">طرف حساب</label>
         <input type="text" id="fParty" list="partyList" placeholder="نام شخص" required>
@@ -407,7 +422,7 @@
         <span class="label">سود خالص نهایی</span>
         <span class="value" id="repNet" style="font-size:20px">۰</span>
       </div>
-      <h2 style="margin-bottom:8px">سود به تفکیک کد محصول</h2>
+      <h2 style="margin-bottom:8px">سود به تفکیک محصول</h2>
       <table class="codes" id="codesTable"></table>
     </div>
   </section>
@@ -478,7 +493,7 @@ function toGregorian(jy,jm,jd){
   return d2g(g2d(r.gy,3,r.march) + (jm-1)*31 - jDiv(jm,7)*(jm-7) + jd - 1);
 }
 var JMONTHS = ['فروردین','اردیبهشت','خرداد','تیر','مرداد','شهریور','مهر','آبان','آذر','دی','بهمن','اسفند'];
-// dateStr stored throughout the app is ALREADY a Jalali "jy-jm-jd" string.
+// All dates stored throughout the app are Jalali "jy-jm-jd" strings.
 function fmtJalali(dateStr){
   if(!dateStr) return '';
   var p = dateStr.split('-').map(Number);
@@ -508,22 +523,22 @@ function createDatePicker(containerId){
   const nowJ = toJalaali(new Date().getFullYear(), new Date().getMonth()+1, new Date().getDate());
   const yearSel = el.querySelector('.jd-year');
   let yearsHtml = '';
-  for(let y = nowJ.jy - 6; y <= nowJ.jy + 1; y++) yearsHtml += `<option value="${y}">${y}</option>`;
+  for(let y = nowJ.jy - 6; y <= nowJ.jy + 1; y++) yearsHtml += '<option value="'+y+'">'+y+'</option>';
   yearSel.innerHTML = yearsHtml;
   const monthSel = el.querySelector('.jd-month');
-  monthSel.innerHTML = JMONTHS.map((m,i)=>`<option value="${i+1}">${m}</option>`).join('');
-  function rebuildDays(keepDay){
+  monthSel.innerHTML = JMONTHS.map((m,i)=>'<option value="'+(i+1)+'">'+m+'</option>').join('');
+  function rebuildDays(){
     const jy = Number(yearSel.value), jm = Number(monthSel.value);
     const days = jalaliMonthDays(jy,jm);
     const daySel = el.querySelector('.jd-day');
-    const prev = keepDay || Number(daySel.value) || 1;
+    const prev = Number(daySel.value) || 1;
     let html = '';
-    for(let d=1; d<=days; d++) html += `<option value="${d}">${d}</option>`;
+    for(let d=1; d<=days; d++) html += '<option value="'+d+'">'+d+'</option>';
     daySel.innerHTML = html;
     daySel.value = Math.min(prev, days);
   }
-  yearSel.addEventListener('change', ()=>rebuildDays());
-  monthSel.addEventListener('change', ()=>rebuildDays());
+  yearSel.addEventListener('change', rebuildDays);
+  monthSel.addEventListener('change', rebuildDays);
   rebuildDays();
   setPickerValue(containerId, nowJalaliStr());
 }
@@ -535,7 +550,7 @@ function setPickerValue(containerId, jStr){
   const days = jalaliMonthDays(p[0],p[1]);
   const daySel = el.querySelector('.jd-day');
   let html = '';
-  for(let d=1; d<=days; d++) html += `<option value="${d}">${d}</option>`;
+  for(let d=1; d<=days; d++) html += '<option value="'+d+'">'+d+'</option>';
   daySel.innerHTML = html;
   daySel.value = p[2];
 }
@@ -547,12 +562,12 @@ function getPickerValue(containerId){
   return jy+'-'+jm+'-'+jd;
 }
 
-/* ================= State & storage ================= */
+/* ================= State & storage (browser localStorage — works standalone, e.g. GitHub Pages) ================= */
 let transactions = [];
 let expenses = [];
 let adjustments = [];
 let entryType = 'in';
-let openPerson = null;
+let personSearchTerm = '';
 
 async function loadKey(key){
   try{ const v = localStorage.getItem('shopledger:'+key); return v ? JSON.parse(v) : null; }
@@ -576,6 +591,7 @@ function toman(n){
   return n.toLocaleString('fa-IR') + ' تومان';
 }
 function uid(){ return Date.now().toString(36)+Math.random().toString(36).slice(2,7); }
+function txTotal(t){ return (Number(t.price)||0) * (Number(t.quantity)||1); }
 
 /* ================= Navigation ================= */
 function showTab(name){
@@ -612,7 +628,7 @@ function setEntryType(type){
   const submitBtn = document.getElementById('entrySubmit');
   if(type==='in'){
     document.getElementById('entryTitle').textContent = 'ثبت ورود کالا (خرید)';
-    document.getElementById('lblPrice').textContent = 'مبلغ خرید (تومان)';
+    document.getElementById('lblPrice').textContent = 'قیمت واحد خرید (تومان)';
     document.getElementById('lblParty').textContent = 'از چه کسی خریدید؟';
     document.getElementById('fParty').placeholder = 'نام فروشنده / تأمین‌کننده';
     document.getElementById('lblPaid').textContent = 'پول را پرداخت کرده‌ام';
@@ -620,16 +636,25 @@ function setEntryType(type){
     submitBtn.classList.remove('out');
   } else {
     document.getElementById('entryTitle').textContent = 'ثبت خروج کالا (فروش)';
-    document.getElementById('lblPrice').textContent = 'مبلغ فروش (تومان)';
+    document.getElementById('lblPrice').textContent = 'قیمت واحد فروش (تومان)';
     document.getElementById('lblParty').textContent = 'به چه کسی فروختید؟';
     document.getElementById('fParty').placeholder = 'نام مشتری';
     document.getElementById('lblPaid').textContent = 'پول را دریافت کرده‌ام';
     submitBtn.textContent = 'ثبت خروج کالا';
     submitBtn.classList.add('out');
   }
+  updateTotalPreview();
 }
 document.getElementById('segIn').addEventListener('click', ()=>setEntryType('in'));
 document.getElementById('segOut').addEventListener('click', ()=>setEntryType('out'));
+
+function updateTotalPreview(){
+  const price = Number(document.getElementById('fPrice').value)||0;
+  const qty = Number(document.getElementById('fQty').value)||0;
+  document.getElementById('fTotalPreview').textContent = toman(price*qty);
+}
+document.getElementById('fPrice').addEventListener('input', updateTotalPreview);
+document.getElementById('fQty').addEventListener('input', updateTotalPreview);
 
 document.getElementById('entryForm').addEventListener('submit', async (e)=>{
   e.preventDefault();
@@ -638,8 +663,8 @@ document.getElementById('entryForm').addEventListener('submit', async (e)=>{
     type: entryType,
     date: getPickerValue('fDate'),
     productName: document.getElementById('fName').value.trim(),
-    productCode: document.getElementById('fCode').value.trim(),
     invoiceNumber: document.getElementById('fInvoice').value.trim(),
+    quantity: Number(document.getElementById('fQty').value)||1,
     price: Number(document.getElementById('fPrice').value)||0,
     party: document.getElementById('fParty').value.trim(),
     paid: document.getElementById('fPaid').checked,
@@ -651,7 +676,9 @@ document.getElementById('entryForm').addEventListener('submit', async (e)=>{
   refreshPartyList();
   e.target.reset();
   setPickerValue('fDate', nowJalaliStr());
+  document.getElementById('fQty').value = 1;
   setEntryType(entryType);
+  updateTotalPreview();
   renderDashboard();
   showTab('dashboard');
 });
@@ -715,8 +742,8 @@ function computePersonBalances(){
     if(!t.party) return;
     const p = ensure(t.party);
     if(t.paid) return;
-    if(t.type==='out') p.oweToMe += Number(t.price);
-    if(t.type==='in') p.oweFromMe += Number(t.price);
+    if(t.type==='out') p.oweToMe += txTotal(t);
+    if(t.type==='in') p.oweFromMe += txTotal(t);
   });
   adjustments.forEach(a=>{
     if(!a.party) return;
@@ -726,7 +753,6 @@ function computePersonBalances(){
   return Object.values(map).sort((a,b)=> Math.abs(b.net) - Math.abs(a.net));
 }
 
-let personSearchTerm = '';
 function renderPersons(){
   let list = computePersonBalances();
   if(personSearchTerm) list = list.filter(p=> p.name.includes(personSearchTerm));
@@ -753,25 +779,36 @@ function renderPersons(){
       </div>
       <div class="detail">
         ${relatedTx.map(t=>`
-          <div class="tx-mini">
-            <span>${t.type==='out'?'فروش':'خرید'}: ${escapeHtml(t.productName)}${t.invoiceNumber?' (فاکتور #'+escapeHtml(t.invoiceNumber)+')':''} — ${fmtJalali(t.date)}
-              <span class="badge-paid no" data-toggle-paid="${t.id}">تسویه نشده</span>
-            </span>
-            <span class="amt">${toman(t.price)}</span>
+          <div class="tx-mini-wrap" data-tx-wrap="${t.id}">
+            <div class="tx-mini">
+              <span class="desc">${t.type==='out'?'فروش':'خرید'}: ${escapeHtml(t.productName)}${t.invoiceNumber?' (فاکتور #'+escapeHtml(t.invoiceNumber)+')':''} — ${fmtJalali(t.date)}<br>
+                <span style="color:var(--muted)">${(Number(t.quantity)||1)} عدد × ${toman(t.price)}</span></span>
+              <span class="amt">${toman(txTotal(t))}</span>
+            </div>
+            <div class="tx-mini-actions">
+              <button class="btn-small" data-edit-tx="${t.id}">ویرایش</button>
+            </div>
+            <div class="tx-edit-form" id="edit-${t.id}" style="display:none">
+              <input type="text" class="et-name" placeholder="نام محصول" value="${escapeHtml(t.productName)}">
+              <div class="row2">
+                <input type="number" class="et-price" placeholder="قیمت واحد" value="${t.price}">
+                <input type="number" class="et-qty" placeholder="تعداد" value="${Number(t.quantity)||1}" min="1">
+              </div>
+              <input type="text" class="et-party" placeholder="نام شخص" value="${escapeHtml(t.party)}">
+              <div class="tx-edit-actions">
+                <button class="btn-small primary" data-save-tx="${t.id}">ذخیره</button>
+                <button class="btn-small" data-cancel-tx="${t.id}">انصراف</button>
+              </div>
+            </div>
           </div>
         `).join('')}
         ${relatedAdj.map(a=>`
-          <div class="tx-mini">
-            <span>تنظیم دستی${a.note?': '+escapeHtml(a.note):''} — ${fmtJalali(a.date)}</span>
-            <span class="amt">${a.amount>=0?'+':''}${toman(a.amount)}</span>
+          <div class="adj-mini">
+            <span>تسویه${a.note?': '+escapeHtml(a.note):''} — ${fmtJalali(a.date)}</span>
+            <span class="mono">${a.amount>=0?'+':''}${toman(a.amount)}</span>
           </div>
         `).join('')}
         ${(relatedTx.length===0 && relatedAdj.length===0) ? '<div class="empty" style="padding:8px">موردی برای نمایش نیست.</div>' : ''}
-        <div class="adj-form">
-          <input type="number" placeholder="مبلغ اصلاح (+/-)" data-adj-amount="${escapeHtml(p.name)}">
-          <input type="text" placeholder="یادداشت" data-adj-note="${escapeHtml(p.name)}">
-          <button data-adj-submit="${escapeHtml(p.name)}">ثبت</button>
-        </div>
         <button class="settle-btn" data-settle="${escapeHtml(p.name)}">تسویه کامل حساب</button>
       </div>
     </div>`;
@@ -780,31 +817,51 @@ function renderPersons(){
   el.querySelectorAll('[data-toggle]').forEach(h=>{
     h.addEventListener('click', ()=>{
       const name = h.getAttribute('data-toggle');
-      const personEl = el.querySelector(`.person[data-person="${CSS.escape(name)}"]`);
+      const personEl = el.querySelector('.person[data-person="'+CSS.escape(name)+'"]');
       const wasOpen = personEl.classList.contains('open');
       el.querySelectorAll('.person.open').forEach(p=>p.classList.remove('open'));
       if(!wasOpen) personEl.classList.add('open');
     });
   });
-  el.querySelectorAll('[data-toggle-paid]').forEach(b=>{
-    b.addEventListener('click', async (ev)=>{
+  el.querySelectorAll('[data-edit-tx]').forEach(b=>{
+    b.addEventListener('click', (ev)=>{
       ev.stopPropagation();
-      const id = b.getAttribute('data-toggle-paid');
-      const t = transactions.find(x=>x.id===id);
-      if(t){ t.paid = true; await saveKey('transactions', transactions); renderPersons(); renderDashboard(); }
+      const id = b.getAttribute('data-edit-tx');
+      const form = document.getElementById('edit-'+id);
+      form.style.display = form.style.display==='none' ? 'flex' : 'none';
     });
   });
-  el.querySelectorAll('[data-adj-submit]').forEach(b=>{
+  el.querySelectorAll('[data-cancel-tx]').forEach(b=>{
+    b.addEventListener('click', (ev)=>{
+      ev.stopPropagation();
+      const id = b.getAttribute('data-cancel-tx');
+      document.getElementById('edit-'+id).style.display = 'none';
+    });
+  });
+  el.querySelectorAll('[data-save-tx]').forEach(b=>{
     b.addEventListener('click', async (ev)=>{
       ev.stopPropagation();
-      const name = b.getAttribute('data-adj-submit');
-      const amountInput = el.querySelector(`[data-adj-amount="${CSS.escape(name)}"]`);
-      const noteInput = el.querySelector(`[data-adj-note="${CSS.escape(name)}"]`);
-      const amount = Number(amountInput.value);
-      if(!amount){ alert('یک مبلغ معتبر وارد کنید (مثبت یا منفی)'); return; }
-      adjustments.push({id:uid(), date: nowJalaliStr(), party:name, amount, note: noteInput.value.trim()});
-      await saveKey('adjustments', adjustments);
-      renderPersons();
+      const id = b.getAttribute('data-save-tx');
+      const form = document.getElementById('edit-'+id);
+      const name = form.querySelector('.et-name').value.trim();
+      const price = Number(form.querySelector('.et-price').value);
+      const qty = Number(form.querySelector('.et-qty').value);
+      const party = form.querySelector('.et-party').value.trim();
+      if(!name || !party || !(price>=0) || !(qty>=1)){
+        alert('لطفاً همه‌ی فیلدها را درست پر کنید (تعداد حداقل ۱).');
+        return;
+      }
+      const t = transactions.find(x=>x.id===id);
+      if(t){
+        t.productName = name;
+        t.price = price;
+        t.quantity = qty;
+        t.party = party;
+        await saveKey('transactions', transactions);
+        refreshPartyList();
+        renderPersons();
+        renderDashboard();
+      }
     });
   });
   el.querySelectorAll('[data-settle]').forEach(b=>{
@@ -817,9 +874,14 @@ function renderPersons(){
       adjustments.push({id:uid(), date: nowJalaliStr(), party:name, amount: -p.net, note:'تسویه حساب'});
       await saveKey('adjustments', adjustments);
       renderPersons();
+      renderDashboard();
     });
   });
 }
+document.getElementById('personSearch').addEventListener('input', (e)=>{
+  personSearchTerm = e.target.value.trim();
+  renderPersons();
+});
 
 /* ================= History ================= */
 function renderHistory(){
@@ -834,14 +896,14 @@ function renderHistory(){
   el.innerHTML = list.map(t=>`
     <div class="hist-row">
       <div class="hist-top">
-        <span class="hist-prod">${escapeHtml(t.productName)} ${t.productCode?'<span class="code">#'+escapeHtml(t.productCode)+'</span>':''}</span>
-        <span class="hist-amt ${t.type}">${t.type==='in'?'-':'+'}${toman(t.price)}</span>
+        <span class="hist-prod">${escapeHtml(t.productName)} <span style="color:var(--muted);font-weight:500">× ${Number(t.quantity)||1}</span></span>
+        <span class="hist-amt ${t.type}">${t.type==='in'?'-':'+'}${toman(txTotal(t))}</span>
       </div>
       <div class="hist-meta">
         <span>${t.type==='in'?'خرید از':'فروش به'} ${escapeHtml(t.party)} · ${fmtJalali(t.date)} <span style="opacity:.6">(${toGregorianStr(t.date)})</span>${t.invoiceNumber?' · فاکتور #'+escapeHtml(t.invoiceNumber):''}</span>
-        <span class="badge-paid ${t.paid?'yes':'no'}" data-tp="${t.id}">${t.paid ? 'تسویه شده' : 'تسویه نشده'}</span>
+        <span class="badge-paid ${t.paid?'yes':'no'}" data-tp="${t.id}" style="cursor:pointer;padding:2px 7px;border-radius:20px;font-size:10.5px;${t.paid?'background:var(--debt-me-soft);color:var(--debt-me)':'background:var(--debt-them-soft);color:var(--debt-them)'}">${t.paid ? 'تسویه شده' : 'تسویه نشده'}</span>
       </div>
-      <div class="hist-meta"><span>روش پرداخت: ${escapeHtml(t.method||'—')}</span></div>
+      <div class="hist-meta"><span>قیمت واحد: ${toman(t.price)} · روش پرداخت: ${escapeHtml(t.method||'—')}</span></div>
       ${t.notes ? `<div class="hist-meta">${escapeHtml(t.notes)}</div>` : ''}
       <div class="hist-actions">
         <button class="del" data-del-tx="${t.id}">حذف</button>
@@ -865,10 +927,6 @@ function renderHistory(){
 }
 document.getElementById('filterType').addEventListener('change', renderHistory);
 document.getElementById('filterPaid').addEventListener('change', renderHistory);
-document.getElementById('personSearch').addEventListener('input', (e)=>{
-  personSearchTerm = e.target.value.trim();
-  renderPersons();
-});
 
 /* ================= Dashboard ================= */
 function renderDashboard(){
@@ -885,8 +943,8 @@ function renderDashboard(){
   document.getElementById('todayLine').textContent = fmtJalali(todayJ) + ' (' + toGregorianStr(todayJ) + ')';
 
   const monthTx = transactions.filter(t=>t.date && t.date.startsWith(ymPrefix));
-  const sales = monthTx.filter(t=>t.type==='out').reduce((s,t)=>s+Number(t.price),0);
-  const purch = monthTx.filter(t=>t.type==='in').reduce((s,t)=>s+Number(t.price),0);
+  const sales = monthTx.filter(t=>t.type==='out').reduce((s,t)=>s+txTotal(t),0);
+  const purch = monthTx.filter(t=>t.type==='in').reduce((s,t)=>s+txTotal(t),0);
   const monthExp = expenses.filter(e=>e.date && e.date.startsWith(ymPrefix)).reduce((s,e)=>s+Number(e.amount),0);
   const profit = sales - purch - monthExp;
   document.getElementById('dashSales').textContent = toman(sales);
@@ -903,8 +961,8 @@ document.getElementById('rCalc').addEventListener('click', ()=>{
   const txs = transactions.filter(t=>inRange(t.date));
   const exps = expenses.filter(e=>inRange(e.date));
 
-  const sales = txs.filter(t=>t.type==='out').reduce((s,t)=>s+Number(t.price),0);
-  const purch = txs.filter(t=>t.type==='in').reduce((s,t)=>s+Number(t.price),0);
+  const sales = txs.filter(t=>t.type==='out').reduce((s,t)=>s+txTotal(t),0);
+  const purch = txs.filter(t=>t.type==='in').reduce((s,t)=>s+txTotal(t),0);
   const totalExp = exps.reduce((s,e)=>s+Number(e.amount),0);
   const gross = sales - purch;
   const net = gross - totalExp;
@@ -915,24 +973,23 @@ document.getElementById('rCalc').addEventListener('click', ()=>{
   document.getElementById('repExp').textContent = toman(totalExp);
   document.getElementById('repNet').textContent = toman(net);
 
-  const codeMap = {};
+  const nameMap = {};
   txs.forEach(t=>{
-    const key = t.productCode ? t.productCode.trim() : ('(بدون کد) '+t.productName);
-    if(!codeMap[key]) codeMap[key] = {code:key, name:t.productName, buy:0, sell:0};
-    if(t.type==='in') codeMap[key].buy += Number(t.price);
-    else codeMap[key].sell += Number(t.price);
-    codeMap[key].name = t.productName;
+    const key = (t.productName||'نامشخص').trim();
+    if(!nameMap[key]) nameMap[key] = {name:key, buy:0, sell:0};
+    if(t.type==='in') nameMap[key].buy += txTotal(t);
+    else nameMap[key].sell += txTotal(t);
   });
-  const rows = Object.values(codeMap);
+  const rows = Object.values(nameMap);
   const tbl = document.getElementById('codesTable');
   if(rows.length===0){
     tbl.innerHTML = '<tr><td class="empty" colspan="4">تراکنشی در این بازه نیست</td></tr>';
   } else {
-    tbl.innerHTML = `<tr><th>کد / محصول</th><th>خرید</th><th>فروش</th><th>سود</th></tr>` +
+    tbl.innerHTML = '<tr><th>محصول</th><th>خرید</th><th>فروش</th><th>سود</th></tr>' +
       rows.map(r=>{
         const p = r.sell - r.buy;
         return `<tr>
-          <td>${escapeHtml(r.code)}<br><span style="color:var(--muted);font-size:10.5px">${escapeHtml(r.name)}</span></td>
+          <td>${escapeHtml(r.name)}</td>
           <td>${toman(r.buy)}</td>
           <td>${toman(r.sell)}</td>
           <td class="${p>=0?'profit-pos':'profit-neg'}">${toman(p)}</td>
@@ -954,7 +1011,7 @@ function refreshPartyList(){
 /* ================= Backup / Restore ================= */
 function downloadBackup(){
   const payload = {
-    app: 'shop-ledger',
+    app: 'arax-mood',
     exportedAt: new Date().toISOString(),
     exportedAtJalali: fmtJalali(nowJalaliStr()),
     transactions, expenses, adjustments
@@ -1015,10 +1072,10 @@ function tickClock(){
   createDatePicker('rFrom');
   createDatePicker('rTo');
   const todayJ = nowJalaliStr();
-  const firstOfMonthJ = todayJ.slice(0,7) + '-01';
-  setPickerValue('rFrom', firstOfMonthJ);
+  setPickerValue('rFrom', todayJ.slice(0,7) + '-01');
   setPickerValue('rTo', todayJ);
   setEntryType('in');
+  updateTotalPreview();
   refreshPartyList();
   renderDashboard();
   tickClock();
